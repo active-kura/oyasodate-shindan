@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>親育て診断 〜 あなたの季節と気質を知る</title>
+<meta name="description" content="介護というかけがえのない経験を通じて、今のあなたの「季節」と「気質」を知る診断です。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="weather-strip" aria-hidden="true"></div>
+
+<main id="app">
+
+  <!-- ============ SCREEN: LANDING ============ -->
+  <section class="screen" id="screen-landing" data-screen>
+    <div class="card-shell">
+      <p class="eyebrow">親育て診断</p>
+      <h1 class="display">あなたは今、<br>どの季節を、<br>生きていますか。</h1>
+      <p class="lead">
+        介護という経験には、まっすぐな正解も、決まったゴールもありません。<br>
+        ただ、今のあなたが、どんな季節の中にいて、どんな気質で、それと向き合っているか——<br>
+        その景色を、静かに映し出す診断です。
+      </p>
+      <p class="lead-sub">全17問、5分ほどで終わります。</p>
+
+      <form id="form-entry" class="entry-form">
+        <label class="field">
+          <span>お名前</span>
+          <input type="text" id="input-name" placeholder="例）山田 花子" required>
+        </label>
+        <label class="field">
+          <span>メールアドレス</span>
+          <input type="email" id="input-email" placeholder="you@example.com" required>
+        </label>
+        <button type="submit" class="btn btn-primary">診断をはじめる</button>
+        <p class="fine-print">入力いただいた情報は、診断結果のお届けと、ご案内のためだけに使用します。</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: QUIZ ============ -->
+  <section class="screen" id="screen-quiz" data-screen hidden>
+    <div class="card-shell">
+      <div class="progress-track" aria-hidden="true">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <p class="q-counter" id="q-counter">質問 1 / 17</p>
+
+      <div id="trait-intro" class="trait-intro" hidden>
+        <p class="trait-intro-text">
+          ここからは、介護の話から少し離れます。あなたがもともと持っている、人との関わり方の“気質”を知るための質問です。介護の場面に限らず、日頃のあなたを思い浮かべてお答えください。
+        </p>
+        <button class="btn btn-primary" id="btn-trait-continue">つづける</button>
+      </div>
+
+      <div id="question-wrap">
+        <h2 class="q-text" id="q-text"></h2>
+        <div class="q-options" id="q-options"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: LOADING ============ -->
+  <section class="screen" id="screen-loading" data-screen hidden>
+    <div class="card-shell center">
+      <div class="loader" aria-hidden="true"></div>
+      <p class="lead">あなたの季節と気質を、<br>読み解いています…</p>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: RESULT ============ -->
+  <section class="screen" id="screen-result" data-screen hidden>
+    <div class="card-shell result-shell">
+      <p class="eyebrow" id="result-eyebrow">あなたの結果</p>
+      <h1 class="display result-title" id="result-title"></h1>
+
+      <div class="result-body" id="result-body"></div>
+
+      <hr class="divider">
+
+      <section class="gift">
+        <p class="eyebrow">ここまで、ありがとうございます</p>
+        <h3 class="gift-title">今日は、あなたに、2つのものを</h3>
+
+        <div class="gift-audio">
+          <p class="gift-label">① ナオより、短い音声メッセージ</p>
+          <audio controls preload="none" id="gift-audio-player">
+            <source src="audio/message.mp3" type="audio/mpeg">
+          </audio>
+          <p class="fine-print">※音声が再生されない場合、準備中の可能性があります。少し時間をおいて、もう一度お試しください。</p>
+        </div>
+
+        <div class="gift-cards">
+          <p class="gift-label">② 手元に置いておける、3枚のカード</p>
+          <div class="cards-row" id="cards-row"></div>
+        </div>
+      </section>
+
+      <hr class="divider">
+
+      <section class="next-step">
+        <p class="lead">
+          あなたの季節・気質、それぞれに、丁寧に向き合っていく動画も、ご用意しています。<br>
+          焦らず、ご自身のタイミングで、また、覗きにきてください。
+        </p>
+      </section>
+    </div>
+  </section>
+
+</main>
+
+<canvas id="card-canvas" width="1080" height="1080" hidden></canvas>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
