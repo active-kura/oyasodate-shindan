@@ -184,31 +184,42 @@
   }
 
   // ---------------- gift cards (canvas-generated, downloadable) ----------------
-  var CARD_TEXTS = [
-    "今日は、ここまでで、\n大丈夫です。",
-    "ここまで歩いてきた、\nその強さは、本物です。",
-    "これでいいんです。\n今のあなたに、必要な学びが、\nちゃんとここにあります。"
-  ];
-  var CARD_GRADIENTS = [
-    ["#C99A94", "#8C87A6"],
-    ["#93A7B8", "#8C87A6"],
-    ["#7FA98B", "#93A7B8"]
+  // paper: #F6F1E6  paper-deep: #EFE7D8  ink: #3A4750  ink-soft: #6B7680
+  // wakatake(green): #7FA98B  sakuranezu(rose): #C99A94  usugumo(blue-gray): #93A7B8  fuji(purple): #8C87A6
+  var CARDS = [
+    {
+      lines: ["今日は、ここまでで、", "大丈夫です。"],
+      accent: "#93A7B8",
+      motif: "rain"
+    },
+    {
+      lines: ["ここまで歩いてきた、", "その強さは、本物です。"],
+      accent: "#C99A94",
+      motif: "path"
+    },
+    {
+      lines: ["これでいいんです。", "今のあなたに、必要な学びが、", "ちゃんとここにあります。"],
+      accent: "#7FA98B",
+      motif: "light"
+    }
   ];
 
   function renderCards() {
     var row = $("#cards-row");
     row.innerHTML = "";
-    CARD_TEXTS.forEach(function (text, i) {
+    CARDS.forEach(function (card) {
       var el = document.createElement("div");
       el.className = "mini-card";
+      el.style.background =
+        "linear-gradient(160deg, " + card.accent + "cc, " + card.accent + "66), var(--paper)";
       var p = document.createElement("div");
-      p.textContent = text;
+      p.textContent = card.lines.join("\n");
       p.style.whiteSpace = "pre-wrap";
       var btn = document.createElement("button");
       btn.type = "button";
       btn.textContent = "画像を保存";
       btn.addEventListener("click", function () {
-        downloadCard(text, CARD_GRADIENTS[i]);
+        downloadCard(card);
       });
       el.appendChild(p);
       el.appendChild(btn);
@@ -216,39 +227,133 @@
     });
   }
 
-  function downloadCard(text, gradient) {
+  function drawMotif(ctx, type, accent, w, h) {
+    ctx.save();
+    ctx.strokeStyle = accent;
+    ctx.fillStyle = accent;
+
+    if (type === "rain") {
+      ctx.globalAlpha = 0.16;
+      [[0.32, 0.24, 130], [0.5, 0.20, 100], [0.66, 0.25, 115]].forEach(function (c) {
+        ctx.beginPath();
+        ctx.arc(w * c[0], h * c[1], c[2], 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 0.22;
+      ctx.lineWidth = 5;
+      ctx.lineCap = "round";
+      var drops = [[0.30, 0.40], [0.42, 0.46], [0.54, 0.40], [0.62, 0.48], [0.70, 0.42]];
+      drops.forEach(function (d, i) {
+        var x = w * d[0], y0 = h * d[1], len = 46 + (i % 2) * 18;
+        ctx.beginPath();
+        ctx.moveTo(x, y0);
+        ctx.lineTo(x - 10, y0 + len);
+        ctx.stroke();
+      });
+
+    } else if (type === "path") {
+      ctx.globalAlpha = 0.20;
+      var pts = [
+        [0.18, 0.86], [0.27, 0.80], [0.36, 0.83], [0.45, 0.76],
+        [0.54, 0.79], [0.63, 0.72], [0.72, 0.75], [0.81, 0.68]
+      ];
+      pts.forEach(function (p, i) {
+        ctx.beginPath();
+        ctx.ellipse(w * p[0], h * p[1], i % 2 === 0 ? 15 : 11, i % 2 === 0 ? 22 : 16, -0.4, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+    } else if (type === "light") {
+      var cx = w * 0.78, cy = h * 0.22;
+      ctx.globalAlpha = 0.20;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 150, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.14;
+      ctx.lineWidth = 4;
+      for (var a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * 190, cy + Math.sin(a) * 190);
+        ctx.lineTo(cx + Math.cos(a) * 250, cy + Math.sin(a) * 250);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+
+  function wrapAndDraw(ctx, text, cx, cy, maxWidth, lineHeight) {
+    var paragraphs = text.split("\n");
+    var lines = [];
+    paragraphs.forEach(function (p) {
+      if (ctx.measureText(p).width <= maxWidth) {
+        lines.push(p);
+        return;
+      }
+      var chars = p.split("");
+      var line = "";
+      chars.forEach(function (ch) {
+        var test = line + ch;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          lines.push(line);
+          line = ch;
+        } else {
+          line = test;
+        }
+      });
+      if (line) lines.push(line);
+    });
+    var startY = cy - ((lines.length - 1) * lineHeight) / 2;
+    lines.forEach(function (line, i) {
+      ctx.fillText(line, cx, startY + i * lineHeight);
+    });
+    return lines.length;
+  }
+
+  function downloadCard(card) {
     var canvas = $("#card-canvas");
     var ctx = canvas.getContext("2d");
     var w = canvas.width, h = canvas.height;
 
-    var grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0, gradient[0]);
-    grad.addColorStop(1, gradient[1]);
-    ctx.fillStyle = grad;
+    ctx.fillStyle = "#F6F1E6";
     ctx.fillRect(0, 0, w, h);
 
-    // soft vignette circles for texture
-    ctx.globalAlpha = 0.12;
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath(); ctx.arc(w * 0.15, h * 0.85, 260, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(w * 0.9, h * 0.1, 220, 0, Math.PI * 2); ctx.fill();
+    var base = ctx.createRadialGradient(w * 0.5, h * 0.62, 60, w * 0.5, h * 0.62, w * 0.85);
+    base.addColorStop(0, "#FBF8F1");
+    base.addColorStop(1, "#EFE7D8");
+    ctx.fillStyle = base;
+    ctx.fillRect(0, 0, w, h);
+
+    drawMotif(ctx, card.motif, card.accent, w, h);
+
+    ctx.strokeStyle = "#3A475026";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(54, 54, w - 108, h - 108);
+    ctx.strokeStyle = "#3A475014";
+    ctx.strokeRect(66, 66, w - 132, h - 132);
+
+    ctx.fillStyle = card.accent;
+    ctx.textAlign = "center";
+    ctx.font = "500 26px 'Zen Kaku Gothic New', sans-serif";
+    ctx.globalAlpha = 0.9;
+    ctx.fillText("親 育 て 診 断", w / 2, h * 0.30);
     ctx.globalAlpha = 1;
 
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#3A4750";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = "600 64px 'Hiragino Mincho ProN', 'Yu Mincho', serif";
+    ctx.font = "600 58px 'Hiragino Mincho ProN', 'Yu Mincho', serif";
+    wrapAndDraw(ctx, card.lines.join("\n"), w / 2, h * 0.52, w - 220, 90);
 
-    var lines = text.split("\n");
-    var lineHeight = 92;
-    var startY = h / 2 - ((lines.length - 1) * lineHeight) / 2;
-    lines.forEach(function (line, i) {
-      ctx.fillText(line, w / 2, startY + i * lineHeight);
-    });
+    ctx.strokeStyle = "#3A475030";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.42, h * 0.855);
+    ctx.lineTo(w * 0.58, h * 0.855);
+    ctx.stroke();
 
-    ctx.font = "400 30px 'Zen Kaku Gothic New', sans-serif";
-    ctx.globalAlpha = 0.85;
-    ctx.fillText("親育て診断", w / 2, h - 90);
+    ctx.fillStyle = "#6B7680";
+    ctx.font = "400 24px 'Zen Kaku Gothic New', sans-serif";
+    ctx.fillText("なおみよワークショップ研究所", w / 2, h * 0.90);
 
     var link = document.createElement("a");
     link.download = "oyasodate-card.png";
