@@ -1,122 +1,273 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>親育て診断 〜 あなたの季節と気質を知る</title>
-<meta name="description" content="介護というかけがえのない経験を通じて、今のあなたの「季節」と「気質」を知る診断です。">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+/* ==========================================================
+   親育て診断 — トークン
+   紙のような生成り地に、四季の気配を淡く滲ませる。
+   色は和名から: 生成り / 藍鼠 / 若竹色 / 桜鼠 / 薄雲色
+   ========================================================== */
+:root {
+  --paper: #F6F1E6;
+  --paper-deep: #EFE7D8;
+  --ink: #3A4750;
+  --ink-soft: #6B7680;
+  --wakatake: #7FA98B;   /* 若竹色 - 実り/協働 */
+  --sakuranezu: #C99A94; /* 桜鼠 - 嵐/献身 */
+  --usugumo: #93A7B8;    /* 薄雲色 - 凪/冷静 */
+  --fuji: #8C87A6;       /* 藤色 - 深まり/責任 */
+  --line: rgba(58, 71, 80, 0.14);
+  --shadow: 0 12px 40px rgba(58, 71, 80, 0.10);
+  --radius: 22px;
+  --serif: "Shippori Mincho", serif;
+  --sans: "Zen Kaku Gothic New", sans-serif;
+}
 
-<div class="weather-strip" aria-hidden="true"></div>
+* { box-sizing: border-box; }
 
-<main id="app">
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
 
-  <!-- ============ SCREEN: LANDING ============ -->
-  <section class="screen" id="screen-landing" data-screen>
-    <div class="card-shell">
-      <p class="eyebrow">親育て診断</p>
-      <h1 class="display">あなたは今、<br>どの季節を、<br>生きていますか。</h1>
-      <p class="lead">
-        介護という経験には、まっすぐな正解も、決まったゴールもありません。<br>
-        ただ、今のあなたが、どんな季節の中にいて、どんな気質で、それと向き合っているか——<br>
-        その景色を、静かに映し出す診断です。
-      </p>
-      <p class="lead-sub">全17問、5分ほどで終わります。</p>
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-      <form id="form-entry" class="entry-form">
-        <label class="field">
-          <span>お名前</span>
-          <input type="text" id="input-name" placeholder="例）山田 花子" required>
-        </label>
-        <label class="field">
-          <span>メールアドレス</span>
-          <input type="email" id="input-email" placeholder="you@example.com" required>
-        </label>
-        <button type="submit" class="btn btn-primary">診断をはじめる</button>
-        <p class="fine-print">入力いただいた情報は、診断結果のお届けと、ご案内のためだけに使用します。</p>
-      </form>
-    </div>
-  </section>
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
 
-  <!-- ============ SCREEN: QUIZ ============ -->
-  <section class="screen" id="screen-quiz" data-screen hidden>
-    <div class="card-shell">
-      <div class="progress-track" aria-hidden="true">
-        <div class="progress-fill" id="progress-fill"></div>
-      </div>
-      <p class="q-counter" id="q-counter">質問 1 / 17</p>
+.weather-strip {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 10%, rgba(201,154,148,0.28), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 85% 15%, rgba(147,167,184,0.26), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 25% 90%, rgba(140,135,166,0.22), transparent 60%),
+    radial-gradient(ellipse 55% 45% at 90% 85%, rgba(127,169,139,0.26), transparent 60%),
+    var(--paper);
+  background-size: 200% 200%;
+  animation: driftWeather 48s ease-in-out infinite;
+}
+@keyframes driftWeather {
+  0%   { background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%, 0 0; }
+  50%  { background-position: 20% 10%, 80% 20%, 10% 90%, 90% 80%, 0 0; }
+  100% { background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%, 0 0; }
+}
 
-      <div id="trait-intro" class="trait-intro" hidden>
-        <p class="trait-intro-text">
-          ここからは、介護の話から少し離れます。あなたがもともと持っている、人との関わり方の“気質”を知るための質問です。介護の場面に限らず、日頃のあなたを思い浮かべてお答えください。
-        </p>
-        <button class="btn btn-primary" id="btn-trait-continue">つづける</button>
-      </div>
+main#app {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 18px 64px;
+}
 
-      <div id="question-wrap">
-        <h2 class="q-text" id="q-text"></h2>
-        <div class="q-options" id="q-options"></div>
-      </div>
-    </div>
-  </section>
+.screen { width: 100%; display: flex; justify-content: center; }
+.screen[hidden] { display: none; }
 
-  <!-- ============ SCREEN: LOADING ============ -->
-  <section class="screen" id="screen-loading" data-screen hidden>
-    <div class="card-shell center">
-      <div class="loader" aria-hidden="true"></div>
-      <p class="lead">あなたの季節と気質を、<br>読み解いています…</p>
-    </div>
-  </section>
+.card-shell {
+  width: 100%;
+  max-width: 620px;
+  background: rgba(255, 253, 248, 0.72);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 48px 40px;
+  animation: riseIn 0.6s ease both;
+}
+.card-shell.center { text-align: center; align-items: center; }
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 
-  <!-- ============ SCREEN: RESULT ============ -->
-  <section class="screen" id="screen-result" data-screen hidden>
-    <div class="card-shell result-shell">
-      <p class="eyebrow" id="result-eyebrow">あなたの結果</p>
-      <h1 class="display result-title" id="result-title"></h1>
+@media (max-width: 560px) {
+  .card-shell { padding: 34px 22px; border-radius: 18px; }
+}
 
-      <div class="result-body" id="result-body"></div>
+.eyebrow {
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  color: var(--ink-soft);
+  margin: 0 0 14px;
+  text-transform: uppercase;
+}
 
-      <hr class="divider">
+.display {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: clamp(28px, 5vw, 38px);
+  line-height: 1.5;
+  margin: 0 0 22px;
+  letter-spacing: 0.01em;
+}
 
-      <section class="gift">
-        <p class="eyebrow">ここまで、ありがとうございます</p>
-        <h3 class="gift-title">今日は、あなたに、2つのものを</h3>
+.lead {
+  font-size: 16px;
+  line-height: 2;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+.lead-sub {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0 0 30px;
+}
 
-        <div class="gift-audio">
-          <p class="gift-label">① ナオより、短い音声メッセージ</p>
-          <audio controls preload="none" id="gift-audio-player">
-            <source src="audio/message.mp3" type="audio/mpeg">
-          </audio>
-          <p class="fine-print">※音声が再生されない場合、準備中の可能性があります。少し時間をおいて、もう一度お試しください。</p>
-        </div>
+.entry-form { display: flex; flex-direction: column; gap: 18px; }
+.field { display: flex; flex-direction: column; gap: 8px; font-size: 14px; color: var(--ink-soft); }
+.field input {
+  font-family: var(--sans);
+  font-size: 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.field input:focus {
+  border-color: var(--wakatake);
+  box-shadow: 0 0 0 3px rgba(127,169,139,0.22);
+}
 
-        <div class="gift-cards">
-          <p class="gift-label">② 手元に置いておける、3枚のカード</p>
-          <div class="cards-row" id="cards-row"></div>
-        </div>
-      </section>
+.btn {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 16px;
+  border: none;
+  border-radius: 999px;
+  padding: 16px 28px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.btn:focus-visible { outline: 3px solid var(--fuji); outline-offset: 3px; }
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 8px 22px rgba(58,71,80,0.22);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 26px rgba(58,71,80,0.28); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-      <hr class="divider">
+.fine-print { font-size: 12.5px; color: var(--ink-soft); line-height: 1.7; margin-top: 4px; }
 
-      <section class="next-step">
-        <p class="lead">
-          あなたの季節・気質、それぞれに、丁寧に向き合っていく動画も、ご用意しています。<br>
-          焦らず、ご自身のタイミングで、また、覗きにきてください。
-        </p>
-      </section>
-    </div>
-  </section>
+.progress-track {
+  height: 5px;
+  background: var(--paper-deep);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--sakuranezu), var(--usugumo), var(--fuji), var(--wakatake));
+  transition: width 0.4s ease;
+}
+.q-counter { font-size: 13px; color: var(--ink-soft); margin: 0 0 26px; letter-spacing: 0.04em; }
 
-</main>
+.trait-intro { text-align: center; padding: 10px 0 4px; }
+.trait-intro-text { font-size: 15.5px; line-height: 2; margin-bottom: 26px; }
 
-<canvas id="card-canvas" width="1080" height="1080" hidden></canvas>
+.q-text {
+  font-family: var(--serif);
+  font-size: clamp(20px, 3.4vw, 24px);
+  line-height: 1.7;
+  font-weight: 700;
+  margin: 0 0 26px;
+}
+.q-options { display: flex; flex-direction: column; gap: 12px; }
+.q-option {
+  text-align: left;
+  font-family: var(--sans);
+  font-size: 15.5px;
+  line-height: 1.6;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+.q-option:hover { border-color: var(--fuji); background: #FBF8F1; }
+.q-option:active { transform: scale(0.99); }
+.q-option:focus-visible { outline: 3px solid var(--fuji); outline-offset: 2px; }
 
-<script src="data.js"></script>
-<script src="app.js"></script>
-</body>
-</html>
+.loader {
+  width: 44px; height: 44px;
+  margin: 0 auto 22px;
+  border-radius: 50%;
+  border: 3px solid var(--line);
+  border-top-color: var(--wakatake);
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.result-shell { max-width: 680px; }
+.result-title {
+  font-size: clamp(24px, 4.4vw, 30px);
+  line-height: 1.6;
+}
+.result-body {
+  font-size: 16px;
+  line-height: 2.05;
+  white-space: pre-wrap;
+}
+.result-body strong { font-weight: 700; color: var(--ink); }
+
+.divider { border: none; border-top: 1px solid var(--line); margin: 40px 0; }
+
+.gift-title { font-family: var(--serif); font-size: 20px; margin: 0 0 22px; }
+.gift-label { font-size: 14px; font-weight: 700; color: var(--ink-soft); margin: 0 0 12px; letter-spacing: 0.02em; }
+.gift-audio { margin-bottom: 32px; }
+.gift-audio audio { width: 100%; }
+
+.cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+@media (max-width: 520px) {
+  .cards-row { grid-template-columns: 1fr; }
+}
+.mini-card {
+  border-radius: 16px;
+  padding: 20px 16px;
+  color: #fff;
+  font-family: var(--serif);
+  font-size: 14.5px;
+  line-height: 1.85;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 8px 20px rgba(58,71,80,0.16);
+}
+.mini-card:nth-child(1) { background: linear-gradient(160deg, var(--sakuranezu), var(--fuji)); }
+.mini-card:nth-child(2) { background: linear-gradient(160deg, var(--usugumo), var(--fuji)); }
+.mini-card:nth-child(3) { background: linear-gradient(160deg, var(--wakatake), var(--usugumo)); }
+.mini-card button {
+  align-self: flex-start;
+  margin-top: 12px;
+  background: rgba(255,255,255,0.22);
+  border: 1px solid rgba(255,255,255,0.5);
+  color: #fff;
+  font-family: var(--sans);
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.mini-card button:hover { background: rgba(255,255,255,0.32); }
+
+.next-step { text-align: center; }
